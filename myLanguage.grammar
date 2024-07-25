@@ -1,0 +1,222 @@
+@precedence { call @left, postfix @left, prefix @left, product @left, sum @left, logicalAnd @left, logicalOr @left, lessGreater @left, equals @left, lowest @left }
+
+@top Program { statement* }
+
+annotation {
+  Comment
+  | DocString
+}
+
+AritmeticOperator {
+  !sum "+"
+  | !sum "-"
+  | !product "*" 
+  | !product "/" 
+  | !product "//" 
+  | !product "%" 
+  | !sum "+=" 
+  | !sum "-=" 
+  | !product "*=" 
+  | !product "/=" 
+  | !product "//=" 
+  | !product "%="
+}
+
+AssignStatement {
+  DataType Identifier !lowest "=" expression ";"?
+}
+
+BlockStatement {
+  "{" statement* "}"
+}
+
+BooleanLiteral {
+  true
+  | false
+}
+
+ComparisonOperator {
+  !equals "=="
+  | !equals "!=" 
+  | !lessGreater "<" 
+  | !lessGreater "<=" 
+  | !lessGreater ">" 
+  | !lessGreater ">="
+}
+
+DataType {
+  Any
+  | Boolean
+  | Callable
+  | Date
+  | DateTime
+  | Float
+  | Int
+  | Number
+  | String
+  | Temporal
+  | Time
+  | Url
+}
+
+DocString {
+  "\"\"\"([^\"\\]|\\.)*\"\"\""
+}
+
+expression {
+  !lowest InfixExpression
+  | !prefix PrefixExpression
+  | !postfix PostfixExpression
+}
+
+ExpressionStatement {
+  expression ";"?
+}
+
+GroupedExpression {
+  !call "(" expression ")"
+}
+
+IfExpression {
+  if "(" expression ")" BlockStatement
+  (else "if" expression BlockStatement)*
+  (else BlockStatement)?
+}
+
+InfixExpression {
+  expression (AritmeticOperator | ComparisonOperator | LogicalOperator) expression
+  | RoutineCall
+}
+
+LogicalOperator {
+  !logicalAnd and
+  | !logicalOr or
+}
+
+NoneLiteral {
+  none
+}
+
+PostfixExpression {
+  expression PostfixOperator
+}
+
+PostfixOperator {
+  !postfix Increment
+  | !postfix Decrement
+}
+
+PrefixExpression {
+  PrefixOperator expression
+  | BooleanLiteral
+  | Decrement
+  | DateLiteral
+  | DateTimeLiteral
+  | FloatLiteral
+  | Identifier
+  | IfExpression
+  | Increment
+  | IntegerLiteral
+  | GroupedExpression
+  | NoneLiteral
+  | Routine
+  | StringLiteral
+  | TimeLiteral
+  | UrlLiteral
+}
+
+PrefixOperator {
+  !equals not
+  | !sum "-"
+  | !postfix Increment
+  | !postfix Decrement
+}
+
+ReturnStatement {
+  return expression ";"?
+}
+
+Routine {
+  routine "(" RoutineParams ")" ":" DataType BlockStatement
+}
+
+RoutineCall {
+  Identifier !call "(" RoutineCallParams ")"
+}
+
+RoutineCallParams {
+  (expression ("," expression)*)?
+}
+
+RoutineParams {
+  (DataType Identifier ("," DataType Identifier)*)?
+}
+
+statement {
+  annotation
+  | AssignStatement
+  | ReturnStatement
+  | ExpressionStatement
+}
+
+@tokens {
+  Any { "any" }
+  Boolean { "bool" }
+  Callable { "callable" }
+  Date { "date" }
+  DateTime { "datetime" }
+  Float { "float" }
+  Int { "int" }
+  Number { "number" }
+  String { "str" }
+  Temporal { "temporal" }
+  Time { "time" }
+  Url { "url" }
+
+  Decrement { "--" }
+  Increment { "++" }
+
+  Comment { "#" ![\n]* "\n" }
+  Identifier { letter (letter | digit)* }
+  
+  DateLiteral { "'" digit digit digit digit "-" digit digit "-" digit digit "'" }
+  DateTimeLiteral { "'" digit digit digit digit "-" digit digit "-" digit digit "T" digit digit ":" digit digit ":" digit digit "'" }
+  FloatLiteral { digit+ "." digit* }
+  IntegerLiteral { digit+ }
+  StringLiteral { "\"" ![\"]* "\"" }
+  TimeLiteral { "'" digit digit ":" digit digit ":" digit digit "'" }
+  UrlLiteral {
+    "\"" "http://" (letter | digit | symbol | space)+ "\""
+    | "\"" "https://" (letter | digit | symbol | space)+ "\""
+  }
+
+  digit { $[0-9] }
+  letter { $[a-zA-Z] }
+  space { " " | "\t" | "\n" }
+  symbol { "?" | "#" | "$" | "%" | "&" | "*" | "+" | "-" | "/" | ":" | "<" | "=" | ">" | "@" | "^" | "_" | "`" | "|" | "~" }
+
+  
+  else { "else" }
+  if { "if" }
+  return { "return" }
+  routine { "routine" }
+  true { "true" }
+  false { "false" }
+  none { "none" }
+  and { "and" }
+  or { "or" }
+  not { "not" }
+
+  @precedence { 
+    FloatLiteral IntegerLiteral
+    UrlLiteral StringLiteral
+    Time Temporal Url String Number Int Float Date DateTime Callable Boolean Any
+    else if return routine true false none and or not
+    Identifier
+  }
+
+}
+
+@skip {
+  space
+}
