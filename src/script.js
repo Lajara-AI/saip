@@ -1,5 +1,5 @@
 import { EditorState } from "@codemirror/state";
-import { EditorView, basicSetup } from "@codemirror/basic-setup";
+import { EditorView, basicSetup } from "codemirror";
 import { myLanguageSupport } from "./myLanguage.js";
 
 let state = EditorState.create({
@@ -18,4 +18,3 @@ let view = new EditorView({
     state,
     parent: document.getElementById('editor')
 });
-
